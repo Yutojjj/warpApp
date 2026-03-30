@@ -19,7 +19,7 @@ app.add_middleware(
 
 # --- 設定項目 ---
 # ブラウザでスプレッドシートを開いた時のURLにある .../d/(ここ)/edit の文字列を入れてください
-SPREADSHEET_ID = "1s-MMS9JhIzOie3GfRA_DFkQ-1KphszhB0sQDf47ZG6s/edit?gid=0#gid=0"
+SPREADSHEET_ID = "1s-MMS9JhIzOie3GfRA_DFkQ-1KphszhB0sQDf47ZG6s"
 
 def get_gspread_client():
     """Vercelの環境変数からGoogle認証を行い、クライアントを返す"""
