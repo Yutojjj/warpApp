@@ -2,7 +2,6 @@ import { Dimensions, StyleSheet } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// 共通で使用する色をここへ集約
 export const COLORS = {
   base: '#0A0A0A',
   surface: '#1A1A1A',
@@ -56,7 +55,44 @@ export const styles = StyleSheet.create({
   fabMainButton: { flexDirection: 'row', backgroundColor: COLORS.accent, padding: 12, paddingHorizontal: 20, borderRadius: 30, alignItems: 'center' },
   fabMainText: { color: '#000', fontWeight: 'bold', marginLeft: 8 },
 
-  // --- デジタル履歴書 ---
+  // --- PDF風グリッド用スタイル ---
+  gridContainer: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginVertical: 10,
+    backgroundColor: COLORS.base,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    minHeight: 45,
+  },
+  gridLabel: {
+    width: 90,
+    backgroundColor: '#1A1A1A',
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    borderRightWidth: 1,
+    borderRightColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gridValue: {
+    flex: 1,
+    backgroundColor: '#0A0A0A',
+    justifyContent: 'center',
+  },
+  gridLabelText: {
+    color: COLORS.accent,
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
+  // --- デジタル履歴書 / プレビュー関連 ---
   appPreviewBackdrop: { flex: 1, backgroundColor: '#0B1120' }, 
   appPreviewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10 },
   appHeaderTitle: { color: COLORS.accent, fontSize: 14, fontWeight: 'bold', letterSpacing: 1 },
@@ -68,7 +104,6 @@ export const styles = StyleSheet.create({
   appMainName: { fontSize: 30, fontWeight: 'bold', color: '#FFF', marginRight: 10 },
   appStatusBadge: { backgroundColor: '#10B981', paddingVertical: 4, paddingHorizontal: 12, borderRadius: 12 },
   appStatusText: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
-
   appDashRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
   appBasicCard: { flex: 1, backgroundColor: '#3B0764', borderRadius: 16, padding: 15, marginRight: 10 },
   appContactCard: { flex: 1, backgroundColor: '#171717', borderRadius: 16, padding: 15, borderWidth: 1, borderColor: '#D4AF37' },
@@ -81,64 +116,15 @@ export const styles = StyleSheet.create({
   appContactIcons: { flexDirection: 'row', justifyContent: 'space-between' },
   appContactBtn: { alignItems: 'center' },
   appContactLabel: { color: '#94A3B8', fontSize: 10, marginTop: 5 },
-
   appSectionLabel: { color: '#94A3B8', fontSize: 12, fontWeight: 'bold', letterSpacing: 1, marginBottom: 15, paddingLeft: 5 },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   categoryCard: { width: '48%', backgroundColor: '#1E293B', borderRadius: 20, padding: 20, marginBottom: 15, alignItems: 'center', borderWidth: 1, borderColor: '#334155' },
   categoryIconBg: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   categoryTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: 'bold', marginBottom: 4 },
   categorySub: { color: '#94A3B8', fontSize: 11 },
-
-  // --- タイル状ポップアップ ---
   detailPopupOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center' },
   detailPopupCard: { width: '92%', maxHeight: '82%', backgroundColor: '#1E293B', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: COLORS.accent },
   detailPopupHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#334155' },
   detailPopupTitle: { color: COLORS.accent, fontSize: 18, fontWeight: 'bold' },
-  detailPopupContent: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  detailPopupRow: { backgroundColor: '#0F172A', padding: 12, borderRadius: 10, marginBottom: 10 },
-  detailPopupRowHalf: { width: '48%' },
-  detailPopupRowFull: { width: '100%' },
-  detailPopupLabel: { color: '#94A3B8', fontSize: 10, fontWeight: 'bold', marginBottom: 4 },
-  detailPopupValue: { color: '#FFF', fontSize: 14, fontWeight: 'bold' },
   noDataText: { color: '#94A3B8', textAlign: 'center', width: '100%', marginTop: 20, fontSize: 14 },
-  idSectionContainer: {
-    marginBottom: 20,
-    paddingHorizontal: 15,
-  },
-  idCardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  idCardBox: {
-    width: '48%',
-    height: 110,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#2C2C2E',
-    overflow: 'hidden',
-  },
-  idCardImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  idCardPlaceholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderStyle: 'dashed',
-    borderWidth: 1.5,
-    borderColor: 'rgba(212, 175, 55, 0.4)',
-    borderRadius: 12,
-    backgroundColor: 'rgba(26,26,26,0.6)',
-    margin: 2,
-  },
-  idCardText: {
-    color: '#D4AF37',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-  
 });
