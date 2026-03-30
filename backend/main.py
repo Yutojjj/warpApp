@@ -13,7 +13,6 @@ import uvicorn
 
 app = FastAPI()
 
-# スマホアプリからの通信を許可する設定
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
