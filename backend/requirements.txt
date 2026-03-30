@@ -1,4 +1,4 @@
-Flask==3.0.3
-Flask-Cors==4.0.1
-gspread==6.1.2
-google-auth==2.30.0
+Flask
+Flask-Cors
+gspread
+google-auth
