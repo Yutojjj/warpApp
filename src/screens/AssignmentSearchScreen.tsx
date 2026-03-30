@@ -94,10 +94,12 @@ export default function AssignmentSearchScreen({ onBack, menuBg, swipeAnim }: Pr
   const [activeTab, setActiveTab] = useState<TabType>('面接');
   const [quickTypeFilter, setQuickTypeFilter] = useState<TypeFilter>('すべて');
 
-  const slideAnim = useRef(new Animated.Value(screenWidth)).current;           
+  const slideAnim = useRef(new Animated.Value(screenWidth)).current;            
   const fadeAnim = useRef(new Animated.Value(0)).current;            
   const screenSlideAnim = useRef(new Animated.Value(0)).current;
-  const SERVER_URL = 'https://warp-app-three.vercel.app/';
+  
+  // ★ 修正箇所：末尾のスラッシュを削除し、Webでは自分自身のドメインを自動解決させる
+  const SERVER_URL = Platform.OS === 'web' ? '' : 'https://warp-app-three.vercel.app';
 
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear();
