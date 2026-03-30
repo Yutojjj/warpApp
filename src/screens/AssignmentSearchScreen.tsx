@@ -98,11 +98,8 @@ export default function AssignmentSearchScreen({ onBack, menuBg, swipeAnim }: Pr
   const fadeAnim = useRef(new Animated.Value(0)).current;            
   const screenSlideAnim = useRef(new Animated.Value(0)).current;
   
-  // ★ 修正箇所：末尾のスラッシュを削除し、Webでは自分自身のドメインを自動解決させる
-  // ★ 146行目付近の handleSearch の中身をこれに差し替え
-const res = await fetch(`${SERVER_URL}/search`, { 
-  headers: { 'ngrok-skip-browser-warning': 'true' } 
-});
+  // ★ 修正箇所：Webでは空文字にすることで自分自身を参照させる
+  const SERVER_URL = Platform.OS === 'web' ? '' : 'https://warp-app-three.vercel.app';
 
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear();
@@ -279,7 +276,10 @@ const res = await fetch(`${SERVER_URL}/search`, {
     if (!isInitial) closeDrawer();
     setLoading(true);
     try {
-      const res = await fetch(`${SERVER_URL}/search`, { headers: { 'ngrok-skip-browser-warning': 'true' } });
+      // ★ 修正箇所：正しいfetchの呼び出し
+      const res = await fetch(`${SERVER_URL}/search`, { 
+        headers: { 'ngrok-skip-browser-warning': 'true' } 
+      });
       const json = await res.json();
       if (json.status === 'success') {
         // フェッチ直後も新しい順でセット
