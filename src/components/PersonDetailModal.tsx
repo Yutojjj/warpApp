@@ -83,7 +83,9 @@ export default function PersonDetailModal({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const panY = useRef(new Animated.Value(0)).current;
-  const SERVER_URL = 'https://kisha-arthrodial-norene.ngrok-free.dev';
+
+  // ★ 修正箇所：Web版は空文字にして自分自身を参照させる（末尾スラッシュなし）
+  const SERVER_URL = Platform.OS === 'web' ? '' : 'https://warp-app-three.vercel.app';
 
   useEffect(() => {
     if (person && visible) {
@@ -127,6 +129,7 @@ export default function PersonDetailModal({
     if (!editedData) return;
     setIsSaving(true);
     try {
+      // SERVER_URL の後に / を付けて繋ぐ（SERVER_URLが空でも /update_data になる）
       const response = await fetch(`${SERVER_URL}/update_data`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
