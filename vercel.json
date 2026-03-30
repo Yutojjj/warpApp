@@ -1,22 +1,13 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "installCommand": "echo 'Nothing to install'",
-        "buildCommand": "echo 'Nothing to build'",
-        "distDir": "dist"
-      }
-    },
-    {
-      "src": "backend/main.py",
-      "use": "@vercel/python"
-    }
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } },
+    { "src": "main.py", "use": "@vercel/python" }
   ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "backend/main.py" },
-    { "src": "/(.*)", "dest": "/$1" }
+  "rewrites": [
+    { "source": "/search", "destination": "/main.py" },
+    { "source": "/update_data", "destination": "/main.py" },
+    { "source": "/delete_data", "destination": "/main.py" },
+    { "source": "/get_image", "destination": "/main.py" }
   ]
 }
