@@ -1,14 +1,19 @@
 import os
 import json
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 import gspread
+import traceback
+import shutil
+from datetime import datetime
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from google.oauth2.service_account import Credentials
-from typing import List, Dict, Any
+import uvicorn
 
 app = FastAPI()
 
-# ★ CORS設定（Web版React Nativeからのアクセスを許可）
+# スマホアプリからの通信を許可する設定
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,88 +22,137 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- 設定項目 ---
-# ブラウザでスプレッドシートを開いた時のURLにある .../d/(ここ)/edit の文字列を入れてください
-SPREADSHEET_ID = "1s-MMS9JhIzOie3GfRA_DFkQ-1KphszhB0sQDf47ZG6s"
+# ★ 修正点1: Vercel環境ではフォルダが読み取り専用になるため、保存先を /tmp に切り替える処理を追加
+# Vercel環境でなければ元の os.path.dirname(__file__) が使われます
+BASE_DIR = "/tmp" if os.environ.get("VERCEL") else os.path.dirname(__file__)
+IMAGE_FOLDER_NAME = "社員_アルバイト面接書_Images"
+IMAGE_DIR = os.path.join(BASE_DIR, IMAGE_FOLDER_NAME)
 
-def get_gspread_client():
-    """Vercelの環境変数からGoogle認証を行い、クライアントを返す"""
-    creds_json = os.environ.get("GOOGLE_CREDENTIALS")
-    if not creds_json:
-        raise Exception("Vercelの環境変数 'GOOGLE_CREDENTIALS' が設定されていません。")
+if not os.path.exists(IMAGE_DIR):
+    os.makedirs(IMAGE_DIR)
+
+# 画像をURLで配信するための設定
+app.mount(f"/{IMAGE_FOLDER_NAME}", StaticFiles(directory=IMAGE_DIR), name="images")
+
+def get_spreadsheet():
+    scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
     
-    # 環境変数の文字列をJSON(辞書)に変換
-    info = json.loads(creds_json)
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
-    creds = Credentials.from_service_account_info(info, scopes=scopes)
-    return gspread.authorize(creds)
+    # ★ 修正点2: Vercelの環境変数から認証情報を読み込む処理を追加
+    creds_json = os.environ.get("GOOGLE_CREDENTIALS")
+    if creds_json:
+        info = json.loads(creds_json)
+        creds = Credentials.from_service_account_info(info, scopes=scopes)
+    else:
+        # 環境変数がない場合（ローカルなど）は、あなたが書いていた元の credentials.json を探します
+        creds = Credentials.from_service_account_file('credentials.json', scopes=scopes)
+        
+    gc = gspread.authorize(creds)
+    sh = gc.open_by_key("1s-MMS9JhIzOie3GfRA_DFkQ-1KphszhB0sQDf47ZG6s")
+    return sh
 
 @app.get("/search")
-async def search_data():
-    """全データを取得するエンドポイント"""
+def search():
     try:
-        client = get_gspread_client()
-        # 「キャスト」という名前のワークシートを開く
-        sheet = client.open_by_key(SPREADSHEET_ID).worksheet("キャスト")
-        data = sheet.get_all_records()
-        return {"status": "success", "data": data}
+        sh = get_spreadsheet()
+        result = []
+        try:
+            ws_staff = sh.worksheet("社員/アルバイト面接書")
+            all_data_staff = ws_staff.get_all_values()
+            if all_data_staff:
+                headers = all_data_staff[0]
+                for row in all_data_staff[1:]:
+                    item = {headers[i]: row[i] if i < len(row) else "" for i in range(len(headers))}
+                    item["シート区分"] = "スタッフ"
+                    result.append(item)
+        except Exception as e:
+            print(f"スタッフシート取得エラー: {e}")
+        try:
+            ws_cast = sh.worksheet("キャストエントリーシート")
+            all_data_cast = ws_cast.get_all_values()
+            if all_data_cast:
+                headers = all_data_cast[0]
+                for row in all_data_cast[1:]:
+                    item = {headers[i]: row[i] if i < len(row) else "" for i in range(len(headers))}
+                    item["シート区分"] = "キャスト"
+                    result.append(item)
+        except Exception as e:
+            print(f"キャストシート取得エラー: {e}")
+        return {"status": "success", "data": result}
     except Exception as e:
-        print(f"Error in /search: {str(e)}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "debug_error", "reason": str(e)}
+
+@app.get("/get_image")
+async def get_image(image_path: str):
+    try:
+        full_path = os.path.join(BASE_DIR, image_path.replace("\\", "/"))
+        if not os.path.exists(full_path):
+            raise HTTPException(status_code=404, detail="Image not found")
+        return FileResponse(full_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/upload_image")
+async def upload_image(file: UploadFile = File(...), name: str = Form(...), sheet_type: str = Form(...)):
+    try:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_name = f"{timestamp}_photo.jpg"
+        save_path = os.path.join(IMAGE_DIR, file_name)
+        with open(save_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        saved_path = f"{IMAGE_FOLDER_NAME}/{file_name}"
+        sh = get_spreadsheet()
+        sheet_name = "キャストエントリーシート" if sheet_type == "キャスト" else "社員/アルバイト面接書"
+        worksheet = sh.worksheet(sheet_name)
+        headers = worksheet.row_values(1)
+        name_col_index = headers.index("お名前") + 1
+        photo_col_index = headers.index("顔写真") + 1
+        name_column_data = worksheet.col_values(name_col_index)
+        row_index = name_column_data.index(name) + 1
+        worksheet.update_cell(row_index, photo_col_index, saved_path)
+        return {"status": "success", "image_path": saved_path}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/update_data")
 async def update_data(request: Request):
-    """データを更新するエンドポイント"""
     try:
         updated_person = await request.json()
-        client = get_gspread_client()
-        sheet = client.open_by_key(SPREADSHEET_ID).worksheet("キャスト")
-        
-        # 「お名前」をキーにして行を特定
-        name = updated_person.get("お名前")
-        if not name:
-            return {"status": "error", "message": "お名前が指定されていません。"}
-            
-        cell = sheet.find(name)
-        if not cell:
-            return {"status": "error", "message": f"{name} さんが見つかりません。"}
-
-        # ヘッダー行（1行目）を取得して、どの項目が何列目か特定
-        headers = sheet.row_values(1)
-        
-        # データの更新処理
-        update_list = []
+        target_name = updated_person.get("お名前")
+        sheet_type = updated_person.get("シート区分")
+        sh = get_spreadsheet()
+        sheet_name = "キャストエントリーシート" if sheet_type == "キャスト" else "社員/アルバイト面接書"
+        worksheet = sh.worksheet(sheet_name)
+        headers = worksheet.row_values(1)
+        name_col_index = headers.index("お名前") + 1
+        name_column_data = worksheet.col_values(name_col_index)
+        row_index = name_column_data.index(target_name) + 1
+        cells_to_update = []
         for key, value in updated_person.items():
-            if key in headers:
+            if key in headers and key != "お名前" and key != "シート区分":
                 col_index = headers.index(key) + 1
-                sheet.update_cell(cell.row, col_index, value)
-        
+                cells_to_update.append(gspread.Cell(row_index, col_index, value))
+        if cells_to_update:
+            worksheet.update_cells(cells_to_update)
         return {"status": "success"}
     except Exception as e:
-        print(f"Error in /update_data: {str(e)}")
-        return {"status": "error", "message": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/delete_data")
 async def delete_data(request: Request):
-    """データを削除するエンドポイント"""
     try:
-        params = await request.json()
-        name = params.get("お名前")
-        client = get_gspread_client()
-        sheet = client.open_by_key(SPREADSHEET_ID).worksheet("キャスト")
-        
-        cell = sheet.find(name)
-        if cell:
-            sheet.delete_rows(cell.row)
-            return {"status": "success"}
-        return {"status": "error", "message": "見つかりませんでした。"}
+        data = await request.json()
+        target_name = data.get("お名前")
+        sheet_type = data.get("シート区分")
+        sh = get_spreadsheet()
+        sheet_name = "キャストエントリーシート" if sheet_type == "キャスト" else "社員/アルバイト面接書"
+        worksheet = sh.worksheet(sheet_name)
+        name_col_index = worksheet.row_values(1).index("お名前") + 1
+        name_column_data = worksheet.col_values(name_col_index)
+        row_index = name_column_data.index(target_name) + 1
+        worksheet.delete_rows(row_index)
+        return {"status": "success"}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
-# Vercelデプロイ用
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
