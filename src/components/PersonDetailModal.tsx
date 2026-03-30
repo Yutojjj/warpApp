@@ -83,7 +83,7 @@ export default function PersonDetailModal({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const panY = useRef(new Animated.Value(0)).current;
-  const SERVER_URL = 'https://kisha-arthrodial-norene.ngrok-free.dev';
+  const SERVER_URL = 'https://warp-app-three.vercel.app/';
 
   useEffect(() => {
     if (person && visible) {
