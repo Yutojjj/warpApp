@@ -5,8 +5,8 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "installCommand": "echo 'Skip install'",
-        "buildCommand": "echo 'Skip build'",
+        "installCommand": "echo 'Nothing to install'",
+        "buildCommand": "echo 'Nothing to build'",
         "distDir": "dist"
       }
     },
@@ -16,13 +16,7 @@
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/main.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
+    { "src": "/api/(.*)", "dest": "backend/main.py" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
