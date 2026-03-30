@@ -94,12 +94,10 @@ export default function AssignmentSearchScreen({ onBack, menuBg, swipeAnim }: Pr
   const [activeTab, setActiveTab] = useState<TabType>('面接');
   const [quickTypeFilter, setQuickTypeFilter] = useState<TypeFilter>('すべて');
 
-  const slideAnim = useRef(new Animated.Value(screenWidth)).current;            
+  const slideAnim = useRef(new Animated.Value(screenWidth)).current;           
   const fadeAnim = useRef(new Animated.Value(0)).current;            
   const screenSlideAnim = useRef(new Animated.Value(0)).current;
-  
-  // ★ 修正箇所：Webでは空文字にすることで自分自身を参照させる
-  const SERVER_URL = Platform.OS === 'web' ? '' : 'https://warp-app-three.vercel.app';
+  const SERVER_URL = 'https://kisha-arthrodial-norene.ngrok-free.dev';
 
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear();
@@ -276,10 +274,7 @@ export default function AssignmentSearchScreen({ onBack, menuBg, swipeAnim }: Pr
     if (!isInitial) closeDrawer();
     setLoading(true);
     try {
-      // ★ 修正箇所：正しいfetchの呼び出し
-      const res = await fetch(`${SERVER_URL}/search`, { 
-        headers: { 'ngrok-skip-browser-warning': 'true' } 
-      });
+      const res = await fetch(`${SERVER_URL}/search`, { headers: { 'ngrok-skip-browser-warning': 'true' } });
       const json = await res.json();
       if (json.status === 'success') {
         // フェッチ直後も新しい順でセット
