@@ -99,7 +99,10 @@ export default function AssignmentSearchScreen({ onBack, menuBg, swipeAnim }: Pr
   const screenSlideAnim = useRef(new Animated.Value(0)).current;
   
   // ★ 修正箇所：末尾のスラッシュを削除し、Webでは自分自身のドメインを自動解決させる
-  const SERVER_URL = Platform.OS === 'web' ? '' : 'https://warp-app-three.vercel.app';
+  // ★ 146行目付近の handleSearch の中身をこれに差し替え
+const res = await fetch(`${SERVER_URL}/search`, { 
+  headers: { 'ngrok-skip-browser-warning': 'true' } 
+});
 
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear();
