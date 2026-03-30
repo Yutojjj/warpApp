@@ -97,7 +97,7 @@ export default function AssignmentSearchScreen({ onBack, menuBg, swipeAnim }: Pr
   const slideAnim = useRef(new Animated.Value(screenWidth)).current;           
   const fadeAnim = useRef(new Animated.Value(0)).current;            
   const screenSlideAnim = useRef(new Animated.Value(0)).current;
-  const SERVER_URL = 'https://kisha-arthrodial-norene.ngrok-free.dev';
+  const SERVER_URL = 'https://warp-app-three.vercel.app/';
 
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear();
