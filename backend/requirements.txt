@@ -1,4 +1,5 @@
-Flask
-Flask-Cors
-gspread
-google-auth
+fastapi==0.104.1
+gspread==5.12.0
+google-auth==2.23.0
+uvicorn==0.24.0
+pydantic==2.5.2
